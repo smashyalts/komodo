@@ -69,6 +69,7 @@ export const WebsocketProvider = ({ children }: { children: ReactNode }) => {
           console.info(_count + " | Update websocket connection closed");
         },
         cancel,
+        url: url.replace("http", "wss") + "/ws/update"
       });
     }
   }, [user, cancel, connected]);

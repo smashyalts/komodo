@@ -125,6 +125,15 @@ export function KomodoClient(url, options) {
             }
         }
     };
+
+    const executeInBrowser = async (containerId, command) => {
+        const ws = new WebSocket(url.replace("http", "wss") + `/ws/exec/${containerId}`);
+        ws.addEventListener("open", () => {
+            ws.send(JSON.stringify({ type: "exec", params: { command } }));
+        });
+        return ws;
+    };
+
     return {
         /**
          * Call the `/auth` api.
@@ -195,5 +204,16 @@ export function KomodoClient(url, options) {
          * Note. Awaiting this method will never finish.
          */
         subscribe_to_update_websocket,
+        /**
+         * Execute a command in a container in the browser.
+         *
+         * ```
+         * const ws = await komodo.executeInBrowser(containerId, command);
+         * ws.addEventListener("message", (event) => {
+         *   console.log(event.data);
+         * });
+         * ```
+         */
+        executeInBrowser,
     };
 }
