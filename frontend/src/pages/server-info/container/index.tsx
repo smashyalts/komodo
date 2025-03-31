@@ -31,6 +31,8 @@ import { useEditPermissions } from "@pages/resource";
 import { ResourceNotifications } from "@pages/resource-notifications";
 import { MonacoEditor } from "@components/monaco";
 import { useState } from "react";
+import { Terminal } from "xterm";
+import "xterm/css/xterm.css";
 
 export const ContainerPage = () => {
   const { type, id, container } = useParams() as {
@@ -226,6 +228,8 @@ const ContainerPageInner = ({
             />
           )}
         </Section>
+
+        <ContainerTerminal id={id} container={container_name} />
       </div>
     </div>
   );
@@ -389,4 +393,38 @@ const NewDeploymentInner = ({
       loading={isPending}
     />
   );
+};
+
+const ContainerTerminal = ({
+  id,
+  container,
+}: {
+  id: string;
+  container: string;
+}) => {
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const { data: exec, isPending, isError } = useContainerExec(id, container);
+
+  useEffect(() => {
+    if (terminalRef.current && exec) {
+      const terminal = new Terminal();
+      terminal.open(terminalRef.current);
+      terminal.onData((data) => exec.send(data));
+      exec.onmessage = (event) => terminal.write(event.data);
+    }
+  }, [exec]);
+
+  if (isPending) {
+    return (
+      <div className="flex justify-center w-full py-4">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return <div className="flex w-full py-4">Failed to start terminal.</div>;
+  }
+
+  return <div ref={terminalRef} className="h-96 w-full" />;
 };

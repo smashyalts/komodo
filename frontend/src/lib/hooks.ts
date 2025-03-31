@@ -526,3 +526,29 @@ export const useFilterByUpdateAvailable: () => [boolean, () => void] = () => {
   const [filter, set] = useAtom<boolean>(filter_by_update_available);
   return [filter, () => set(!filter)];
 };
+
+export const useContainerExec = (server: string, container: string) => {
+  const [exec, setExec] = useState<WebSocket | null>(null);
+  const [isPending, setIsPending] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const ws = komodo_client().executeInBrowser(server, container);
+    ws.onopen = () => {
+      setExec(ws);
+      setIsPending(false);
+    };
+    ws.onerror = () => {
+      setIsError(true);
+      setIsPending(false);
+    };
+    ws.onclose = () => {
+      setExec(null);
+    };
+    return () => {
+      ws.close();
+    };
+  }, [server, container]);
+
+  return { exec, isPending, isError };
+};
